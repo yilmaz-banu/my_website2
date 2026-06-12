@@ -1,146 +1,115 @@
 <template>
-  <section id="projects" class="py-24 container reveal" ref="sectionRef">
-    <div class="text-center mb-16">
-      <h2 class="text-4xl md:text-5xl font-serif text-text-primary mb-4">Öne Çıkan Çalışmalar</h2>
-      <p class="text-text-muted font-sans text-base">Seçili projeler — donanım, görüntü işleme ve mobil alanda</p>
+  <section id="projects" class="py-20 w-full overflow-hidden bg-gray-50">
+    <div class="container mx-auto px-4 text-center mb-12">
+      <h2 class="text-4xl font-bold text-gray-800 mb-4">Öne Çıkan Çalışmalar</h2>
+      <p class="text-gray-500">Seçili projeler — donanım, görüntü işleme ve mobil alanda</p>
     </div>
-    
-    <div class="w-full">
-      <swiper
-        :effect="'coverflow'"
-        :grabCursor="true"
-        :centeredSlides="true"
-        :slidesPerView="'auto'"
-        :coverflowEffect="{
-          rotate: 0,
-          stretch: 0,
-          depth: 250,
-          modifier: 1,
-          slideShadows: false,
-        }"
-        :autoplay="{
-          delay: 3000,
-          disableOnInteraction: false,
-        }"
-        :loop="true"
-        :pagination="{
-          clickable: true,
-          dynamicBullets: true
-        }"
-        :modules="modules"
-        class="projects-swiper"
+
+    <!-- Swiper Container -->
+    <swiper
+      :effect="'coverflow'"
+      :grabCursor="true"
+      :centeredSlides="true"
+      slidesPerView="auto"
+      :coverflowEffect="{
+        rotate: 0,
+        stretch: 0,
+        depth: 200,
+        modifier: 1,
+        slideShadows: false,
+      }"
+      :autoplay="{
+        delay: 3000,
+        disableOnInteraction: false,
+      }"
+      :loop="true"
+      :pagination="{ clickable: true }"
+      :modules="modules"
+      class="w-full py-10"
+    >
+      <!-- Proje Kartları (w ve h değerleri Tailwind ile sabitlendi) -->
+      <swiper-slide
+        v-for="(project, index) in exampleProjects"
+        :key="index"
+        class="custom-slide w-[320px] h-[450px]"
       >
-        <swiper-slide 
-          v-for="project in projects" 
-          :key="project.id" 
-          class="swiper-slide-custom"
-          @click="goToDetail(project.id)"
-        >
-          <div class="h-full flex flex-col bg-bg-card rounded-2xl border border-border overflow-hidden shadow-soft transition-transform duration-300 hover:border-accent-rose group cursor-pointer relative">
-            <div class="absolute top-0 left-0 w-1 h-full bg-accent-rose opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+        <div class="w-full h-full bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col border border-gray-100">
+          <div class="p-8 flex-1 flex flex-col">
+            <h3 class="text-2xl font-bold text-gray-800 mb-4">{{ project.title }}</h3>
             
-            <div class="p-8 flex-1 flex flex-col">
-              <span class="text-4xl font-serif text-text-muted mb-4">{{ project.id }}</span>
-              <h3 class="text-2xl font-bold font-sans text-text-primary mb-3">{{ project.title }}</h3>
-              <p class="text-text-secondary font-sans leading-relaxed flex-1">{{ project.shortDesc }}</p>
-              
-              <div class="flex flex-wrap gap-2 mt-6">
-                <span v-for="tag in project.tags.slice(0, 3)" :key="tag" class="text-xs font-mono text-text-muted uppercase tracking-wide px-3 py-1 border border-border rounded-full">{{ tag }}</span>
-                <span v-if="project.tags.length > 3" class="text-xs font-mono text-text-muted uppercase tracking-wide px-3 py-1 border border-border rounded-full">+{{ project.tags.length - 3 }}</span>
-              </div>
-            </div>
+            <p class="text-gray-600 leading-relaxed flex-1">
+              {{ project.description }}
+            </p>
             
-            <div class="p-6 border-t border-border flex justify-end items-center bg-bg-secondary/30">
-              <span class="text-text-primary text-2xl transition-transform duration-300 group-hover:translate-x-2">→</span>
+            <div class="flex flex-wrap gap-2 mt-4">
+              <span 
+                v-for="(tag, tIndex) in project.tags" 
+                :key="tIndex" 
+                class="px-3 py-1 bg-gray-100 text-gray-600 text-xs font-semibold rounded-full uppercase tracking-wider"
+              >
+                {{ tag }}
+              </span>
             </div>
           </div>
-        </swiper-slide>
-      </swiper>
-    </div>
+        </div>
+      </swiper-slide>
+    </swiper>
   </section>
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue';
-import { useRouter } from 'vue-router';
+// 1. Swiper Bileşenleri
 import { Swiper, SwiperSlide } from 'swiper/vue';
+
+// 2. KRİTİK: Swiper CSS Dosyaları
 import 'swiper/css';
 import 'swiper/css/effect-coverflow';
 import 'swiper/css/pagination';
-import { EffectCoverflow, Pagination, Autoplay } from 'swiper/modules';
-import { projects } from '../data/projects';
 
-const modules = [EffectCoverflow, Pagination, Autoplay];
-const router = useRouter();
+// 3. Swiper Modülleri
+import { EffectCoverflow, Autoplay, Pagination } from 'swiper/modules';
 
-const sectionRef = ref(null);
-let observer = null;
+// Modülleri Swiper'a tanıtmak için değişkene atama
+const modules = [EffectCoverflow, Autoplay, Pagination];
 
-const goToDetail = (id) => {
-  router.push(`/projects/${id}`);
-};
-
-onMounted(() => {
-  observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add('active');
-        observer.unobserve(entry.target);
-      }
-    });
-  }, { threshold: 0.1 });
-
-  if (sectionRef.value) {
-    observer.observe(sectionRef.value);
+// 4. Veri Yapısı (Örnek Projeler)
+const exampleProjects = [
+  {
+    title: 'Akıllı Sera Sistemi',
+    description: 'ESP32, kapasitif toprak nem sensörü ve Mamdani bulanık mantık kullanılarak iki farklı bitki odası için tasarlanmış otonom kontrol sistemi.',
+    tags: ['C++', 'IoT', 'Fuzzy Logic']
+  },
+  {
+    title: 'InnoPark AI Asistanı',
+    description: 'Kurumsal bilgi kaynakları üzerinde çalışan, PHP ve NotebookLM destekli web tabanlı yapay zeka asistanı.',
+    tags: ['PHP', 'AI', 'Web']
+  },
+  {
+    title: 'Melanom Tespiti',
+    description: 'Sayısal görüntü işleme teknikleri, morfolojik filtreleme ve DullRazor algoritması ile geliştirilen cilt lezyonu tespit projesi.',
+    tags: ['MATLAB', 'Image Processing']
   }
-});
-
-onUnmounted(() => {
-  if (observer) {
-    observer.disconnect();
-  }
-});
+];
 </script>
 
 <style scoped>
-.projects-swiper {
-  width: 100%;
-  padding-top: 2rem;
-  padding-bottom: 4rem; /* Pagination boşluğu */
+/* Swiper slide boyut davranışlarının bozulmasını engeller ve geçiş efekti verir */
+.custom-slide {
+  transition: opacity 0.4s ease-in-out;
 }
 
-.swiper-slide-custom {
-  width: 300px;
-  height: 420px;
-  transition: filter 0.5s ease, opacity 0.5s ease;
-}
-
-@media (min-width: 768px) {
-  .swiper-slide-custom {
-    width: 380px;
-    height: 480px;
-  }
-}
-
-/* Yanlarda kalan projeleri hafif soluk ve bulanık yapma */
+/* Ekranın ortasında olmayan arka kartları %50 şeffaf yapar */
 .swiper-slide:not(.swiper-slide-active) {
-  opacity: 0.4;
-  filter: blur(2px);
+  opacity: 0.5;
 }
 
-/* Özelleştirilmiş Pagination Noktaları */
+/* Sayfalama (noktalar) tasarımı için ufak dokunuşlar */
 :deep(.swiper-pagination-bullet) {
-  background: var(--text-muted);
-  opacity: 0.4;
-  width: 10px;
-  height: 10px;
-  transition: all 0.3s ease;
+  background-color: #9ca3af; /* Tailwind gray-400 */
+  opacity: 0.5;
 }
-
 :deep(.swiper-pagination-bullet-active) {
-  background: var(--accent-rose);
+  background-color: #1f2937; /* Tailwind gray-800 */
   opacity: 1;
-  width: 24px;
-  border-radius: 5px;
 }
 </style>
